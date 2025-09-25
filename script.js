@@ -1,71 +1,79 @@
-function adminLogin(){
-  const pass = prompt("أدخل كلمة السر:");
-  if(pass === "20025"){ window.location.href = "dashboard.html"; }
-  else{ alert("كلمة السر غير صحيحة"); }
+let cards = JSON.parse(localStorage.getItem('cards')) || [];
+
+function openForm() {
+  document.getElementById('formContainer').classList.toggle('hidden');
 }
-function enterViewer(){ window.location.href = "viewer.html"; }
 
-function showAddForm(){document.getElementById("addForm").classList.remove("hidden");}
-function closeForm(){document.getElementById("addForm").classList.add("hidden");}
-
-function saveItem(){
-  const name = document.getElementById("nameInput").value;
-  const id = document.getElementById("idInput").value;
-  const category = document.getElementById("categoryInput").value;
-  const expire = document.getElementById("expireInput").value;
-  const imageFile = document.getElementById("imageInput").files[0];
-  if(!name || !id || !expire){alert("الرجاء تعبئة جميع الحقول");return;}
+function saveCard() {
+  const fileInput = document.getElementById('imgInput');
   const reader = new FileReader();
-  reader.onload = function(e){
-    const item = {name,id,category,expire,image:e.target.result};
-    let items = JSON.parse(localStorage.getItem("insurance_items")||"[]");
-    items.push(item);
-    localStorage.setItem("insurance_items",JSON.stringify(items));
-    renderItems();
-    closeForm();
-  }
-  if(imageFile){reader.readAsDataURL(imageFile);} 
-  else {
-    const item = {name,id,category,expire,image:""};
-    let items = JSON.parse(localStorage.getItem("insurance_items")||"[]");
-    items.push(item);
-    localStorage.setItem("insurance_items",JSON.stringify(items));
-    renderItems();
-    closeForm();
+  reader.onload = function () {
+    const newCard = {
+      img: reader.result,
+      name: document.getElementById('nameInput').value,
+      id: document.getElementById('idInput').value,
+      category: document.getElementById('categoryInput').value,
+      expiry: document.getElementById('expiryInput').value
+    };
+    cards.push(newCard);
+    localStorage.setItem('cards', JSON.stringify(cards));
+    displayCards();
+  };
+  if (fileInput.files[0]) {
+    reader.readAsDataURL(fileInput.files[0]);
   }
 }
 
-let currentTab="all";
-function filterTab(tab){ currentTab=tab; renderItems(); }
+function displayCards(filter = 'الكل') {
+  const container = document.getElementById('cardsContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  const today = new Date().toISOString().split('T')[0];
 
-function renderItems(){
-  const container = document.getElementById("cardsContainer");
-  if(!container) return;
-  container.innerHTML="";
-  let items = JSON.parse(localStorage.getItem("insurance_items")||"[]");
-  const q = document.getElementById("searchInput")?document.getElementById("searchInput").value.trim():"";
-  items.forEach(item=>{
-    const diff=new Date(item.expire)-new Date();
-    const expired=diff<=0;
-    let show=true;
-    if(currentTab!=="all"){
-      if(currentTab==="منتهي" && !expired) show=false;
-      else if(currentTab!=="منتهي" && item.category!==currentTab) show=false;
-    }
-    if(q && !(item.name.includes(q) || item.id.includes(q))) show=false;
-    if(!show) return;
-    const card=document.createElement("div");
-    card.className="card-item";
-    const img=item.image?`<img src="${item.image}" alt="صورة">`:"";
-    let countdown;
-    if(!expired){
-      const days=Math.ceil(diff/(1000*60*60*24));
-      countdown=`<div class='countdown active'>⏳ باقي ${days} يوم</div>`;
-    } else {
-      countdown=`<div class='countdown expired'>❌ انتهى — رجاء التجديد</div>`;
-    }
-    card.innerHTML=`${img}<h3>${item.name}</h3><p>${item.id}</p><p>${item.category}</p>${countdown}`;
-    container.appendChild(card);
+  cards.forEach(card => {
+    const isExpired = today > card.expiry;
+    if (filter !== 'الكل' && filter !== card.category && !(filter === 'منتهي' && isExpired)) return;
+
+    let remaining = Math.ceil((new Date(card.expiry) - new Date()) / (1000*60*60*24));
+    if (remaining < 0) remaining = 0;
+
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'card' + (isExpired ? ' expired' : '');
+    cardDiv.innerHTML = `
+      <img src="${card.img}" alt="">
+      <h3>${card.name}</h3>
+      <p>هوية: ${card.id}</p>
+      <p>الفئة: ${card.category}</p>
+      <p>ينتهي: ${card.expiry}</p>
+      <p>${isExpired ? "انتهى التأمين" : "متبقي " + remaining + " يوم"}</p>
+    `;
+    container.appendChild(cardDiv);
   });
 }
-document.addEventListener("DOMContentLoaded",renderItems);
+
+function filterCards(cat) {
+  displayCards(cat);
+}
+
+function clearData() {
+  if (confirm("متأكد من حذف جميع البيانات؟")) {
+    localStorage.removeItem('cards');
+    cards = [];
+    displayCards();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  displayCards();
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const val = searchInput.value.toLowerCase();
+      const container = document.getElementById('cardsContainer');
+      container.querySelectorAll('.card').forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(val) ? '' : 'none';
+      });
+    });
+  }
+});
