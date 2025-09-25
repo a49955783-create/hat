@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم - مستشفى ريسبكت</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="actions">
+      <button onclick="showAddForm()">إضافة</button>
+      <button onclick="alert('تعديل لم يتم تنفيذه بعد')">تعديل</button>
+      <button onclick="alert('حذف لم يتم تنفيذه بعد')">حذف</button>
+    </div>
+    <div class="search">
+      <input id="searchInput" type="text" placeholder="ابحث عن الاسم أو الرقم الوطني" oninput="renderItems()">
+      <span class="search-icon">🔍</span>
+    </div>
+    <div class="brand-wrap">
+      <span class="brand-title">مستشفى ريسبكت</span>
+      <img class="brand-logo" src="golden_logo.png" alt="شعار">
+    </div>
+  </nav>
+
+  <div class="tabs">
+    <button onclick="filterTab('all')">الكل</button>
+    <button onclick="filterTab('فضي')">فضي</button>
+    <button onclick="filterTab('ذهبي')">ذهبي</button>
+    <button onclick="filterTab('بلاتيني')">بلاتيني</button>
+    <button onclick="filterTab('منتهي')">منتهي</button>
+  </div>
+
+  <main>
+    <div id="cardsContainer" class="cards-container"></div>
+  </main>
+
+  <div id="addForm" class="modal hidden">
+    <div class="modal-content">
+      <h2>بيانات التأمين</h2>
+      <label>الصورة <input type="file" id="imageInput"></label><br>
+      <label>الاسم <input type="text" id="nameInput"></label><br>
+      <label>الرقم الوطني <input type="text" id="idInput"></label><br>
+      <label>الفئة 
+        <select id="categoryInput">
+          <option>فضي</option>
+          <option>ذهبي</option>
+          <option>بلاتيني</option>
+        </select>
+      </label><br>
+      <label>تاريخ الانتهاء <input type="date" id="expireInput"></label><br>
+      <button onclick="saveItem()">حفظ</button>
+      <button onclick="closeForm()">إلغاء</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
